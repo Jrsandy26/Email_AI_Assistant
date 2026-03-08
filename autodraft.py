@@ -13,6 +13,7 @@ def run_agent():
     """Main loop with auto-restart logic and clean body drafting"""
     print("---")
     print("🚀 AI EMAIL AGENT IS STARTING...")
+    print("User: Sandeep Sai Kumar K I")
     print("📍 Monitoring for clean drafts only.")
     print("---")
 
