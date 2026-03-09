@@ -1,7 +1,29 @@
 import streamlit as st
 import os
+import uuid
+from database import get_user_id, create_conversation, save_message, load_messages
 from openai import OpenAI
 from dotenv import load_dotenv
+
+# -----------------------------
+#  Session id
+# -----------------------------
+if "session_id" not in st.session_state:
+    st.session_state.session_id = str(uuid.uuid4())
+user_id = get_user_id(st.session_state.session_id)
+# -----------------------------
+# Conversation Session
+# -----------------------------
+if "conversation_id" not in st.session_state:
+    st.session_state.conversation_id = create_conversation(user_id)
+# -----------------------------
+# Load CSS File
+# -----------------------------
+def load_css(file_name):
+    with open(file_name) as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+load_css("styles/style.css")
 
 # -----------------------------
 # Load API Key
@@ -26,383 +48,6 @@ st.set_page_config(
     page_icon="✨",
     layout="wide"
 )
-
-# -----------------------------
-# GLOBAL UI STYLES
-# -----------------------------
-st.markdown("""
-<style>
-
-/* -------- GALAXY BACKGROUND -------- */
-
-.stApp{
-background-image:
-radial-gradient(rgba(128,128,128,0.2) 1px, transparent 1px),
-radial-gradient(rgba(128,128,128,0.2) 1px, transparent 1px);
-
-background-size:50px 50px;
-background-position:0 0,25px 25px;
-}
-/* ===== Animated Generate Button ===== */
-
-.stButton > button {
-
-display:flex;
-justify-content:center;
-align-items:center;
-gap:10px;
-
-width:15em;
-height:3.2em;
-
-border-radius:3em;
-
-background:#1C1A1C;
-
-border:none;
-
-font-weight:600;
-
-color:#AAAAAA;
-
-transition:all 450ms ease-in-out;
-
-}
-
-.stButton > button:hover {
-
-background:linear-gradient(0deg,#A47CF3,#683FEA);
-
-box-shadow:
-inset 0px 1px 0px rgba(255,255,255,0.4),
-inset 0px -4px 0px rgba(0,0,0,0.2),
-0px 0px 0px 4px rgba(255,255,255,0.2),
-0px 0px 120px #9917FF;
-
-transform:translateY(-2px);
-
-color:white;
-
-}
-
-/* -------- HERO GRADIENT TITLE -------- */
-
-.hero{
-padding:60px;
-text-align:center;
-border-radius:20px;
-background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
-margin-bottom:40px;
-}
-
-.hero-title{
-font-size:52px;
-font-weight:800;
-
-background:linear-gradient(
-90deg,
-#6e8cff,
-#23c55e,
-#4d6dff,
-#7bdc8d
-);
-
-background-size:300%;
--webkit-background-clip:text;
--webkit-text-fill-color:transparent;
-
-animation:heroGradient 8s linear infinite;
-}
-
-@keyframes heroGradient{
-0%{background-position:0%}
-100%{background-position:300%}
-}
-
-.hero-sub{
-color:#dbe7ff;
-font-size:20px;
-}
-
-/* -------- NAVIGATION -------- */
-
-.stRadio [role="radiogroup"]{
-
-display:flex !important;
-flex-direction:row !important;
-gap:0 !important;
-
-border-radius:20px;
-box-shadow:0 15px 10px rgba(0,0,0,0.25);
-
-width:fit-content;
-margin:auto;
-
-border:1px solid rgba(128,128,128,0.2);
-}
-
-.stRadio input{
-opacity:0;
-position:absolute;
-}
-
-.stRadio label{
-
-padding:14px 25px !important;
-
-cursor:pointer;
-
-background:linear-gradient(
-to bottom,
-var(--secondary-background-color),
-var(--background-color)
-) !important;
-
-transition:0.35s;
-
-font-weight:bold;
-color:var(--text-color) !important;
-
-border:none !important;
-}
-
-.stRadio label:hover{
-
-box-shadow:
-0 0 8px rgba(46,204,113,0.6) inset,
-0 6px 18px rgba(39,174,96,0.4),
-0 0 18px rgba(22,128,76,0.4) inset;
-}
-
-.stRadio div[data-checked="true"] label{
-
-background:linear-gradient(
-150deg,
-#eafaf1,
-#7bdc8d
-) !important;
-
-color:#1a934c !important;
-
-box-shadow:
-0 0 6px #2ecc71 inset,
-0 5px 15px rgba(46,204,113,0.5),
-0 0 20px rgba(22,128,76,0.6) inset;
-
-transform:translateY(-1px);
-}
-
-/* -------- FEATURE CARD (SQUARE) -------- */
-
-.landing-card{
-
-position:relative;
-
-/* square size */
-width:75%;
-aspect-ratio:1/1;
-
-padding:28px;
-
-border-radius:24px;
-
-background:var(--secondary-background-color);
-
-border:1px solid rgba(255,255,255,0.08);
-
-overflow:hidden;
-
-display:flex;
-flex-direction:column;
-justify-content:center;
-align-items:center;
-text-align:center;
-
-transition:0.4s;
-
-}
-
-/* glow orb */
-
-.landing-card::after{
-
-content:"";
-
-position:absolute;
-
-bottom:-30%;
-right:-30%;
-
-width:120px;
-height:120px;
-
-background:#23c55e;
-
-filter:blur(70px);
-
-border-radius:50%;
-
-}
-
-/* expanding glow */
-
-.landing-card::before{
-
-content:"";
-
-position:absolute;
-
-bottom:-160%;
-left:50%;
-
-transform:translate(-50%,-50%);
-
-width:0;
-height:0;
-
-background:#23c55e;
-
-filter:blur(70px);
-
-border-radius:50%;
-
-transition:width 1s,height 1s;
-
-}
-
-.landing-card:hover::before{
-
-bottom:-230%;
-
-width:1000px;
-height:1000px;
-
-filter:blur(1px);
-
-}
-
-/* hover lift */
-
-.landing-card:hover{
-
-transform:translateY(-8px);
-
-}
-/* -------- PROMPT GLOW -------- */
-
-@keyframes cosmicPulse{
-
-0%{
-border-color:#4d6dff;
-box-shadow:0 0 6px rgba(77,109,255,0.4);
-}
-
-50%{
-border-color:#6e8cff;
-box-shadow:0 0 18px rgba(110,140,255,0.7);
-}
-
-100%{
-border-color:#4d6dff;
-box-shadow:0 0 6px rgba(77,109,255,0.4);
-}
-}
-
-[data-testid="stChatInput"]{
-
-border:2px solid #4d6dff !important;
-
-border-radius:12px !important;
-
-animation:cosmicPulse 3s infinite ease-in-out;
-
-padding:6px !important;
-}
-
-/* -------- CHAT BORDER -------- */
-
-.chat-box{
-border-radius:20px;
-padding:15px;
-
-background:
-linear-gradient(var(--background-color),var(--background-color)) padding-box,
-linear-gradient(135deg,#4d6dff,#23c55e,#6e8cff) border-box;
-
-border:3px solid transparent;
-}
-
-/* -------- ICON ANIMATION -------- */
-
-@keyframes userPulse{
-0%,100%{transform:scale(1);opacity:0.8;}
-50%{transform:scale(1.1);opacity:1;color:#007AFF;}
-}
-
-.user-icon{
-display:inline-block;
-animation:userPulse 2s infinite ease-in-out;
-margin-right:6px;
-}
-
-@keyframes aiGlow{
-0%,100%{text-shadow:0 0 5px #4d6dff;}
-50%{text-shadow:0 0 15px #6e8cff;}
-}
-
-.ai-icon{
-display:inline-block;
-animation:aiGlow 3s infinite ease-in-out;
-margin-right:6px;
-}
-
-/* -------- CURSOR -------- */
-
-.typing-cursor{
-animation:blink 1s infinite;
-}
-
-@keyframes blink{
-0%{opacity:1;}
-50%{opacity:0;}
-100%{opacity:1;}
-}
-
-.signature{
-text-align:center;
-font-size:12px;
-opacity:0.6;
-margin-top:6px;
-}
-
-/* -------- CHAT BUBBLES -------- */
-
-[data-testid="stChatMessage"]{
-
-background:var(--secondary-background-color);
-
-border:1px solid rgba(128,128,128,0.2);
-
-border-radius:16px;
-
-padding:12px;
-
-margin-bottom:8px;
-
-}
-
-/* hide default avatars */
-
-[data-testid="stChatMessageAvatarUser"],
-[data-testid="stChatMessageAvatarAssistant"]{
-
-display:none;
-
-}
-
-
-</style>
-""", unsafe_allow_html=True)
 
 # -----------------------------
 # Sidebar
@@ -434,25 +79,38 @@ st.title("Email Wonderland")
 # -----------------------------
 # Navigation
 # -----------------------------
-nav = st.radio(
-"",
-["🏠 Home","💬 Star Chat","📩 Cosmic Reply","✨ Nebula Polish"],
-horizontal=True
+nav_options = ["🏠 Home","💬 Star Chat","📩 Cosmic Reply","✨ Nebula Polish"]
+
+# Initialize state
+if "nav" not in st.session_state:
+    st.session_state.nav = nav_options[0]
+
+# Callback when radio changes
+def update_nav():
+    st.session_state.nav = st.session_state.nav_radio
+
+# Radio navigation
+st.radio(
+    "Navigation",
+    nav_options,
+    horizontal=True,
+    label_visibility="collapsed",
+    key="nav_radio",
+    index=nav_options.index(st.session_state.nav),
+    on_change=update_nav
 )
 
+nav = st.session_state.nav
 # -----------------------------
 # AI Call
 # -----------------------------
-def call_ai(system_prompt, user_prompt):
+def call_ai(messages):
 
     try:
 
         return client.chat.completions.create(
             model="qwen/qwen2.5-coder-7b-instruct",
-            messages=[
-                {"role":"system","content":system_prompt},
-                {"role":"user","content":user_prompt}
-            ],
+            messages=messages,   # full conversation history
             temperature=0.2,
             stream=True
         )
@@ -467,41 +125,273 @@ def call_ai(system_prompt, user_prompt):
 
 if nav == "🏠 Home":
 
+    # Hero Section
     st.markdown("""
     <div class="hero">
-    <div class="hero-title">Email Wonderland</div>
-    <div class="hero-sub">
-    AI-powered email writing assistant
-    </div>
+        <div class="hero-title">Email Wonderland</div>
+        <div class="hero-sub">
+        AI-powered email assistant that helps you write, reply, and refine emails instantly.
+        Designed for professionals, students, and teams who want faster communication.
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
-    col1,col2,col3 = st.columns(3)
 
+    st.markdown("## 🚀 Powerful AI Email Tools")
+
+    col1, col2, col3 = st.columns(3)
+
+    # Star Chat
     with col1:
         st.markdown("""
         <div class="landing-card">
         <h3>💬 Star Chat</h3>
-        Generate professional emails instantly using AI prompts.
+        <p>
+        Describe the email you want to write and the AI will generate a complete,
+        structured message in seconds.
+        </p>
+
+        <ul>
+        <li>Professional formatting</li>
+        <li>Smart tone adjustment</li>
+        <li>Instant email drafts</li>
+        <li>Context-aware writing</li>
+        </ul>
         </div>
         """, unsafe_allow_html=True)
 
+    # Cosmic Reply
     with col2:
         st.markdown("""
         <div class="landing-card">
         <h3>📩 Cosmic Reply</h3>
-        Paste received emails and generate AI replies.
+        <p>
+        Paste an incoming email and describe your response intent.
+        The AI will generate a clear, professional reply instantly.
+        </p>
+
+        <ul>
+        <li>Smart email understanding</li>
+        <li>Quick response generation</li>
+        <li>Custom reply tone</li>
+        <li>Time-saving automation</li>
+        </ul>
         </div>
         """, unsafe_allow_html=True)
 
+    # Nebula Polish
     with col3:
         st.markdown("""
         <div class="landing-card">
         <h3>✨ Nebula Polish</h3>
-        Improve grammar, clarity, and tone of drafts.
+        <p>
+        Improve your existing emails with AI-powered grammar correction
+        and clarity enhancement.
+        </p>
+
+        <ul>
+        <li>Grammar correction</li>
+        <li>Professional tone improvement</li>
+        <li>Clearer sentence structure</li>
+        <li>Readable email formatting</li>
+        </ul>
         </div>
         """, unsafe_allow_html=True)
 
+
+    st.divider()
+
+# How It Works
+    st.markdown("""
+<div class="section-heading">
+⚙️ How Email Wonderland Works
+</div>
+""", unsafe_allow_html=True)
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.markdown("""
+    <div class="how-card">
+    <h3>✍️ Describe Your Email</h3>
+    <p>
+    Enter a prompt, paste an email, or provide a rough draft.
+    The system understands your request and prepares it for AI processing.
+    </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    with col2:
+        st.markdown("""
+    <div class="how-card">
+    <h3>🧠 AI Processes Request</h3>
+    <p>
+    The AI model analyzes tone, context, structure, and intent
+    to generate a clear and professional email response.
+    </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    with col3:
+        st.markdown("""
+    <div class="how-card">
+    <h3>🚀 Instant Results</h3>
+    <p>
+    Get a ready-to-send email within seconds,
+    helping you communicate faster and more effectively.
+    </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.divider()
+
+# Who it's for
+    st.markdown("""
+    <div class="who-heading">
+    👥 Who Is This For?
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div class="who-container">
+
+    <div class="who-card">
+
+    <div class="who-title">
+    Email Wonderland is perfect for
+    </div>
+
+    <div class="who-desc">
+    AI-powered assistant designed for anyone who writes emails frequently.
+    </div>
+
+    <ul class="who-list">
+
+    <li>
+    <span class="who-check">✓</span>
+    Professionals writing daily business emails
+    </li>
+
+    <li>
+    <span class="who-check">✓</span>
+    Students contacting professors or recruiters
+    </li>
+
+    <li>
+    <span class="who-check">✓</span>
+    Customer support teams handling large email volumes
+    </li>
+
+    <li>
+    <span class="who-check">✓</span>
+    HR teams responding to candidates
+    </li>
+
+    <li>
+    <span class="who-check">✓</span>
+    Freelancers managing client communication
+    </li>
+    </ul>
+    </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.divider()
+    
+# CTA Section
+    st.markdown("""
+<div class="cta-section">
+
+<div class="cta-title">
+Start Writing Smarter Emails
+</div>
+
+<div class="cta-sub">
+Generate professional emails instantly using AI-powered automation.
+Save time, improve communication, and boost productivity.
+</div>
+
+<div class="cta-btn-streamlit">
+""", unsafe_allow_html=True)
+
+    if st.button("Start Writing Emails →"):
+        st.session_state.nav = "💬 Star Chat"
+        st.rerun()
+
+    st.markdown("""
+</div>
+
+</div>
+""", unsafe_allow_html=True)
+
+# Footer
+    st.markdown("""
+<div class="footer">
+
+<div class="footer-title">
+Email Wonderland™
+</div>
+
+<p class="footer-desc">
+AI-powered email assistant that helps users generate, reply,
+and refine emails instantly using intelligent automation.
+</p>
+
+<div class="social-container">
+
+<a href="https://github.com/Jrsandy26" target="_blank">
+
+<div class="social-card">
+
+<div class="social-bg"></div>
+
+<div class="social-center">
+GitHub
+</div>
+
+<div class="social-box social-box1">
+
+<svg viewBox="0 0 24 24">
+<path d="M12 .5C5.73.5.5 5.73.5 12a11.5 11.5 0 008 10.94c.59.1.8-.26.8-.57v-2.1c-3.25.71-3.93-1.56-3.93-1.56-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.78 1.2 1.78 1.2 1.03 1.76 2.7 1.25 3.36.95.1-.75.4-1.25.73-1.54-2.6-.3-5.33-1.3-5.33-5.77 0-1.27.45-2.3 1.2-3.12-.12-.3-.52-1.5.11-3.13 0 0 .97-.31 3.18 1.19a10.9 10.9 0 015.8 0c2.21-1.5 3.18-1.19 3.18-1.19.63 1.63.23 2.83.11 3.13.75.82 1.2 1.85 1.2 3.12 0 4.48-2.73 5.47-5.33 5.77.41.35.78 1.05.78 2.12v3.14c0 .31.21.67.81.56A11.5 11.5 0 0023.5 12C23.5 5.73 18.27.5 12 .5z"/>
+</svg>
+
+</div>
+
+</div>
+</a>
+<a href="https://www.linkedin.com/in/sandeepsai26" target="_blank">
+
+<div class="social-card">
+
+<div class="social-bg"></div>
+
+<div class="social-center">
+LinkedIn
+</div>
+
+<div class="social-box social-box2">
+
+<svg viewBox="0 0 448 512">
+<path d="M100.28 448H7.4V148.9h92.88zM53.79 108.1C24.09 108.1 0 83.5 0 53.8A53.79 53.79 0 0153.79 0C83.5 0 108.1 24.09 108.1 53.8s-24.6 54.3-54.31 54.3zM447.9 448h-92.4V302.4c0-34.7-.7-79.3-48.3-79.3-48.3 0-55.7 37.7-55.7 76.7V448h-92.4V148.9h88.7v40.8h1.3c12.4-23.6 42.6-48.3 87.7-48.3 93.8 0 111.1 61.8 111.1 142.3V448z"/>
+</svg>
+
+</div>
+
+</div>
+
+</a>
+
+</div>
+
+<br>
+
+<div class="footer-bottom">
+© 2026 Email Wonderland™ • Built with Streamlit & NVIDIA AI
+</div>
+
+</div>
+""", unsafe_allow_html=True)
+    
 # =============================
 # STAR CHAT
 # =============================
@@ -513,7 +403,13 @@ elif nav == "💬 Star Chat":
     st.markdown('<div class="chat-box">', unsafe_allow_html=True)
 
     if "chat" not in st.session_state:
-        st.session_state.chat = []
+
+        messages = load_messages(st.session_state.conversation_id)
+        
+        st.session_state.chat = [
+            {"role": role, "content": content}
+            for role, content in messages
+        ]
 
     # Show chat history
     for i, msg in enumerate(st.session_state.chat):
@@ -521,44 +417,90 @@ elif nav == "💬 Star Chat":
         with st.chat_message(msg["role"]):
 
             if msg["role"] == "user":
+
                 st.markdown(
                     f"<span class='user-icon'>👤</span> {msg['content']}",
                     unsafe_allow_html=True
                 )
 
             else:
+
                 st.markdown(
                     f"<span class='ai-icon'>🤖</span> {msg['content']}",
                     unsafe_allow_html=True
                 )
 
-                # GPT-like copy button
                 st.code(msg["content"], language="text")
 
             if msg.get("time"):
                 st.caption(msg["time"])
 
+
     prompt = st.chat_input("Write an email...")
 
     if prompt:
 
+        # Save user message
         st.session_state.chat.append({
             "role": "user",
             "content": prompt,
             "time": datetime.now().strftime("%H:%M")
         })
+        
+        save_message(
+        st.session_state.conversation_id,
+        "user",
+        prompt
+     )
+
+        # -----------------------------
+        # Build conversation context
+        # -----------------------------
+
+        messages = [
+            {
+                "role": "system",
+                "content": f"""
+                You are an AI email assistant.
+
+                Your tasks:
+                • Write emails
+                • Modify emails
+                • Shorten emails
+                • Change tone
+
+                Current tone: {tone}
+                """
+            }
+        ]
+
+        # include last 10 messages for context
+        history = st.session_state.chat[-10:]
+
+        for msg in history:
+
+            messages.append({
+                "role": msg["role"],
+                "content": msg["content"]
+            })
+
+        # -----------------------------
+        # Generate AI response
+        # -----------------------------
 
         with st.chat_message("assistant"):
 
             placeholder = st.empty()
             text = ""
 
-            for chunk in call_ai(f"Write a {tone} email", prompt):
+            for chunk in call_ai(messages):
 
                 content = chunk.choices[0].delta.content if chunk.choices else None
 
                 if content:
+
                     text += content
+
                     placeholder.markdown(
                         f"{text}<span class='typing-cursor'>|</span>",
                         unsafe_allow_html=True
@@ -566,16 +508,22 @@ elif nav == "💬 Star Chat":
 
             placeholder.markdown(text)
 
+        # Save AI response
         st.session_state.chat.append({
             "role": "assistant",
             "content": text,
             "time": datetime.now().strftime("%H:%M")
         })
-
+        save_message(
+            st.session_state.conversation_id,
+            "assistant",
+            text
+        )
         st.rerun()
 
     st.markdown('</div>', unsafe_allow_html=True)
-    
+
+
 # =============================
 # COSMIC REPLY
 # =============================
@@ -592,16 +540,44 @@ elif nav == "📩 Cosmic Reply":
 
     if "reply_result" not in st.session_state:
         st.session_state.reply_result = ""
-
+        
     if st.button("Generate Reply") and received:
 
         placeholder = st.empty()
         text = ""
 
-        for chunk in call_ai(
-            f"Write a {tone} reply",
-            f"Email:{received}\nIntent:{intent}"
-        ):
+        messages = [
+            {
+                "role": "system",
+                "content": f"""
+    You are an AI email assistant.
+
+    Your job is to write a reply email based ONLY on:
+    1. The received email
+    2. The reply intent given by the user
+
+    Rules:
+    - Do NOT invent names, hotels, bookings, or information.
+    - Only respond based on the provided email.
+    - Follow the requested tone: {tone}
+    - Keep the reply professional and relevant.
+    """
+            },
+            {
+                "role": "user",
+                "content": f"""
+    Received Email:
+    {received}
+
+    Reply Intent:
+    {intent}
+
+    Write the reply email.
+    """
+            }
+        ]
+
+        for chunk in call_ai(messages):
 
             content = chunk.choices[0].delta.content if chunk.choices else None
 
@@ -611,14 +587,17 @@ elif nav == "📩 Cosmic Reply":
 
         st.session_state.reply_result = text
 
-    if st.session_state.reply_result:
+        save_message(
+            st.session_state.conversation_id,
+            "assistant",
+            text
+        )
 
+    if st.session_state.reply_result:
         st.code(st.session_state.reply_result)
-           
 # =============================
 # NEBULA POLISH
 # =============================
-
 elif nav == "✨ Nebula Polish":
 
     draft = st.text_area("Email Draft", height=300)
@@ -626,14 +605,42 @@ elif nav == "✨ Nebula Polish":
     if "polish_result" not in st.session_state:
         st.session_state.polish_result = ""
 
-    generate = st.button("✨ Improve Email")
+    generate = st.button("✨ Check Grammar")
 
     if generate and draft:
+
+        # Save user draft
+        save_message(
+            st.session_state.conversation_id,
+            "user",
+            f"Polish this email:\n{draft}"
+        )
 
         placeholder = st.empty()
         text = ""
 
-        for chunk in call_ai("Improve grammar and clarity", draft):
+        messages = [
+    {
+        "role": "system",
+        "content": f"""
+        You are a grammar correction assistant.
+
+        Your job is ONLY to correct grammar, spelling, and punctuation errors in the email.
+
+        Rules:
+        - Do NOT rewrite the email completely
+        - Do NOT change meaning
+        - Do NOT add new information
+        - Only fix grammar and sentence errors
+        - Keep the same tone and structure
+        """
+    },
+    {
+        "role": "user",
+        "content": draft
+    }
+]
+        for chunk in call_ai(messages):
 
             content = chunk.choices[0].delta.content if chunk.choices else None
 
@@ -643,7 +650,12 @@ elif nav == "✨ Nebula Polish":
 
         st.session_state.polish_result = text
 
+        # Save AI response
+        save_message(
+            st.session_state.conversation_id,
+            "assistant",
+            text
+        )
+
     if st.session_state.polish_result:
-
         st.code(st.session_state.polish_result)
-

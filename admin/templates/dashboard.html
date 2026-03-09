@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Email Wonderland Admin Dashboard</title>
+	<link rel="stylesheet" href="/static/dashboard.css">
+</head>
+
+<body>
+	<div class="container">
+		<div class="header">
+			<h1 class="title">📊 Email Wonderland Admin Dashboard</h1>
+			<p class="subtitle">Real-time Analytics & System Monitoring</p>
+		</div>
+
+		<!-- USERS SECTION -->
+		<div class="section">
+			<h2 class="section-title">👥 Users</h2>
+			<div class="grid-3">
+				<div class="stat-card">
+					<div class="card-bg"></div>
+					<div class="card-content">
+						<h3 class="card-title">Total Users</h3>
+						<div class="stat-value">{{ users }}</div>
+						<p class="card-desc">Total registered users</p>
+					</div>
+				</div>
+
+				<div class="stat-card">
+					<div class="card-bg"></div>
+					<div class="card-content">
+						<h3 class="card-title">Active Users</h3>
+						<div class="stat-value live-value" id="active_users">0</div>
+						<span class="badge">Live</span>
+					</div>
+				</div>
+
+				<div class="stat-card">
+					<div class="card-bg"></div>
+					<div class="card-content">
+						<h3 class="card-title">New Users</h3>
+						<div class="stat-value" id="new_users">0</div>
+						<p class="card-desc">This month</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- AI USAGE SECTION -->
+		<div class="section">
+			<h2 class="section-title">🤖 AI Usage</h2>
+			<div class="grid-3">
+				<div class="stat-card">
+					<div class="card-bg ai-bg"></div>
+					<div class="card-content">
+						<h3 class="card-title">AI Responses</h3>
+						<div class="stat-value">{{ ai }}</div>
+						<p class="card-desc">Total responses generated</p>
+					</div>
+				</div>
+
+				<div class="stat-card">
+					<div class="card-bg ai-bg"></div>
+					<div class="card-content">
+						<h3 class="card-title">Feature Usage</h3>
+						<div class="stat-value" id="feature_usage">0</div>
+						<p class="card-desc">Features used today</p>
+					</div>
+				</div>
+
+				<div class="stat-card">
+					<div class="card-bg ai-bg"></div>
+					<div class="card-content">
+						<h3 class="card-title">Messages</h3>
+						<div class="stat-value" id="msg_count">0</div>
+						<span class="badge">Live</span>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- AI PERFORMANCE SECTION -->
+		<div class="section">
+			<h2 class="section-title">⚡ AI Performance</h2>
+			<div class="grid-3">
+				<div class="stat-card">
+					<div class="card-bg"></div>
+					<div class="card-content">
+						<h3 class="card-title">Latency</h3>
+						<div class="stat-value" id="latency">0<span class="unit">ms</span></div>
+						<p class="card-desc">Average response time</p>
+					</div>
+				</div>
+
+				<div class="stat-card">
+					<div class="card-bg"></div>
+					<div class="card-content">
+						<h3 class="card-title">Requests/min</h3>
+						<div class="stat-value live-value" id="requests_per_min">0</div>
+						<span class="badge">Live</span>
+					</div>
+				</div>
+
+				<div class="stat-card">
+					<div class="card-bg"></div>
+					<div class="card-content">
+						<h3 class="card-title">Queue</h3>
+						<div class="stat-value" id="queue_count">0</div>
+						<p class="card-desc">Pending requests</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- AI COST SECTION -->
+		<div class="section">
+			<h2 class="section-title">💰 AI Cost</h2>
+			<div class="grid-3">
+				<div class="stat-card">
+					<div class="card-bg"></div>
+					<div class="card-content">
+						<h3 class="card-title">Tokens Used</h3>
+						<div class="stat-value" id="tokens_used">0</div>
+						<p class="card-desc">Total tokens consumed</p>
+					</div>
+				</div>
+
+				<div class="stat-card">
+					<div class="card-bg"></div>
+					<div class="card-content">
+						<h3 class="card-title">Cost Today</h3>
+						<div class="stat-value cost-value" id="cost_today">$0.00</div>
+						<p class="card-desc">Today's API cost</p>
+					</div>
+				</div>
+
+				<div class="stat-card">
+					<div class="card-bg"></div>
+					<div class="card-content">
+						<h3 class="card-title">Cost Total</h3>
+						<div class="stat-value cost-value" id="cost_total">$0.00</div>
+						<p class="card-desc">Total API cost</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- SYSTEM HEALTH SECTION -->
+		<div class="section">
+			<h2 class="section-title">🏥 System Health</h2>
+			<div class="grid-3">
+				<div class="stat-card">
+					<div class="card-bg"></div>
+					<div class="card-content">
+						<h3 class="card-title">API Status</h3>
+						<div class="status-box" id="api_status">
+							<span class="status-dot online"></span>
+							<span>Online</span>
+						</div>
+					</div>
+				</div>
+
+				<div class="stat-card">
+					<div class="card-bg"></div>
+					<div class="card-content">
+						<h3 class="card-title">Database</h3>
+						<div class="status-box" id="db_status">
+							<span class="status-dot online"></span>
+							<span>Connected</span>
+						</div>
+					</div>
+				</div>
+
+				<div class="stat-card">
+					<div class="card-bg"></div>
+					<div class="card-content">
+						<h3 class="card-title">AI Service</h3>
+						<div class="status-box" id="ai_status">
+							<span class="status-dot online"></span>
+							<span>Running</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- ERRORS SECTION -->
+		<div class="section">
+			<h2 class="section-title">⚠️ Errors</h2>
+			<div class="grid-2">
+				<div class="stat-card">
+					<div class="card-bg"></div>
+					<div class="card-content">
+						<h3 class="card-title">Error Count</h3>
+						<div class="stat-value" id="error_count">0</div>
+						<p class="card-desc">Total errors today</p>
+					</div>
+				</div>
+
+				<div class="stat-card">
+					<div class="card-bg"></div>
+					<div class="card-content">
+						<h3 class="card-title">Error Logs</h3>
+						<div id="error_logs" class="log-box">
+							<p class="log-empty">No errors</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- REAL TIME SECTION -->
+		<div class="section">
+			<h2 class="section-title">📡 Real Time</h2>
+			<div class="grid-3">
+				<div class="stat-card">
+					<div class="card-bg"></div>
+					<div class="card-content">
+						<h3 class="card-title">Active Users</h3>
+						<div class="stat-value live-value" id="realtime_active">0</div>
+						<span class="badge">Live</span>
+					</div>
+				</div>
+
+				<div class="stat-card">
+					<div class="card-bg"></div>
+					<div class="card-content">
+						<h3 class="card-title">Messages/min</h3>
+						<div class="stat-value live-value" id="msg_rate">0</div>
+						<span class="badge">Live</span>
+					</div>
+				</div>
+
+				<div class="stat-card">
+					<div class="card-bg"></div>
+					<div class="card-content">
+						<h3 class="card-title">AI Requests</h3>
+						<div class="stat-value live-value" id="ai_requests">0</div>
+						<span class="badge">Live</span>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- AI RUNTIME DETAILS SECTION -->
+		<div class="section">
+			<h2 class="section-title">⏱️ AI Runtime Details</h2>
+			<div class="runtime-details">
+				<div class="detail-item">
+					<span class="detail-label">Runtime:</span>
+					<span class="detail-value" id="runtime_ms">0 ms</span>
+				</div>
+				<div class="detail-item">
+					<span class="detail-label">Status:</span>
+					<span class="detail-value">
+						<span class="status-dot online"></span>
+						Running
+					</span>
+				</div>
+				<div class="detail-item">
+					<span class="detail-label">Last Updated:</span>
+					<span class="detail-value" id="last_updated">--:--:--</span>
+				</div>
+				<div class="detail-item">
+					<span class="detail-label">Estimated API Cost:</span>
+					<span class="detail-value cost-highlight" id="ai_cost">$0.00</span>
+				</div>
+			</div>
+			<a href="#" class="btn-details">View Full Details</a>
+		</div>
+
+		<!-- CONVERSATION INSPECTOR SECTION -->
+		<div class="section">
+			<h2 class="section-title">💬 Conversation Inspector</h2>
+			<div class="inspector-box">
+				<div class="inspector-search">
+					<input type="text" id="search_prompts" placeholder="Search conversations by prompt...">
+					<button class="btn-search">Search</button>
+				</div>
+				<div id="chats_container" class="chats-list">
+					<p class="empty-state">No conversations to display</p>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Update Live Metrics -->
+	<script>
+		async function updateLive() {
+			try {
+				const res = await fetch("/api/live");
+				const data = await res.json();
+				document.getElementById("msg_rate").innerText = data.messages_per_minute;
+			} catch (e) {
+				console.log("Live update not available");
+			}
+		}
+
+		setInterval(updateLive, 4000);
+		updateLive();
+	</script>
+
+	<!-- WebSocket for Real-time Analytics -->
+	<script>
+		const socket = new WebSocket("ws://localhost:8001/ws/analytics");
+
+		socket.onmessage = function(event) {
+			try {
+				const data = JSON.parse(event.data);
+				document.getElementById("runtime").innerText = data.runtime + " ms";
+				document.getElementById("ai_cost").innerText = "$" + data.cost;
+			} catch (e) {
+				console.log("Analytics update error");
+			}
+		};
+
+		socket.onerror = function(error) {
+			console.log("WebSocket connection error");
+		};
+
+		socket.onclose = function() {
+			console.log("WebSocket connection closed");
+		};
+	</script>
+</body>
+</html>
